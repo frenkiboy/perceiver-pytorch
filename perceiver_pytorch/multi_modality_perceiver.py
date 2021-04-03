@@ -149,9 +149,9 @@ class MultiModalityPerceiver(nn.Module):
 
         for cross_attn, cross_ff, latent_attn, latent_ff in self.layers:
             x = cross_attn(x, context=data, mask=mask) + x
-        x = cross_ff(x) + x
-        x = latent_attn(x) + x
-        x = latent_ff(x) + x
+            x = cross_ff(x) + x
+            x = latent_attn(x) + x
+            x = latent_ff(x) + x
 
         x = x.mean(dim=-2)
         return self.to_logits(x)
