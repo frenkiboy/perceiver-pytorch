@@ -1,33 +1,9 @@
-import pytest
-import torch
-from pytest import fixture
 from torch.nn import CrossEntropyLoss
 from torch.optim import SGD
 
+from fixtures import *
 from perceiver_pytorch import Perceiver
 from tests.compare_params import capture_params, compare_parameters
-
-batch_size = 3
-num_classes = 32
-depth = 6
-
-
-@fixture()
-def targets():
-    # batch of 3, 32 frames, 3 channels each frame 260 x 260
-    targets = torch.randint(high=num_classes, size=(batch_size, 1), requires_grad=False).view(-1)
-    return targets
-
-
-@fixture()
-def image_inputs():
-    return torch.rand(size=(3, 260, 260, 3), requires_grad=True)
-
-
-@fixture()
-def video_inputs():
-    # batch of 3, 32 frames, 3 channels each frame 260 x 260
-    return torch.rand(size=(3, 32, 260, 260, 3), requires_grad=True)
 
 
 def test_all_parameters_change(image_inputs, targets):
