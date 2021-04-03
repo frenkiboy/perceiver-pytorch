@@ -1,6 +1,5 @@
 from fixtures import *
-from perceiver_pytorch.multi_modality_perceiver import modality_encoding, MultiModalityPerceiver
-from perceiver_pytorch.perceiver_pytorch import InputModality
+from perceiver_pytorch.multi_modality_perceiver import modality_encoding, MultiModalityPerceiver, InputModality
 
 
 def test_modality_encoding():
