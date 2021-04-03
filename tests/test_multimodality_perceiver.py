@@ -1,5 +1,6 @@
 from fixtures import *
-from perceiver_pytorch.multi_modality_perceiver import modality_encoding, MultiModalityPerceiver, InputModality
+from perceiver_pytorch.modalities import modality_encoding
+from perceiver_pytorch.multi_modality_perceiver import  MultiModalityPerceiver, InputModality
 
 
 def test_modality_encoding():
@@ -51,3 +52,4 @@ def test_multimodality_forward_image_video(image_inputs, video_inputs, audio_inp
                     'video': video_inputs,
                     'audio': audio_inputs})
     assert result is not None
+

@@ -4,7 +4,7 @@ from pytest import fixture
 batch_size = 3
 num_classes = 32
 depth = 2
-
+text_embedding_dim=256
 
 @fixture()
 def targets():
@@ -27,4 +27,10 @@ def video_inputs():
 def audio_inputs():
     # one second of audio sampled at 44100 (one channel/mono)
     return torch.rand(size=(3, 44100,1), requires_grad=True)
+
+
+@fixture()
+def text_inputs():
+    # text token ids of length 512 (1 channel). 32000 tokens.
+    return torch.randint(high=32000, size=(3, 512, 1)).long()
 
