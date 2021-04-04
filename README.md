@@ -1,3 +1,6 @@
+![PyPI](https://img.shields.io/pypi/v/perceiver-multi-modality-pytorch.svg)
+![PyPI](https://img.shields.io/pypi/pyversions/perceiver-multi-modality-pytorch.svg)
+![PyPI](https://img.shields.io/github/license/fac2003/perceiver-mutli-modality-pytorch.svg)
 <img src="./perceiver.png" width="600px"></img>
 
 ## Perceiver - Pytorch
