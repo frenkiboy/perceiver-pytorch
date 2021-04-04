@@ -3,7 +3,7 @@
 ![PyPI](https://img.shields.io/github/license/fac2003/perceiver-mutli-modality-pytorch.svg)
 <img src="./perceiver.png" width="600px"></img>
 
-## Perceiver - Pytorch
+## Multi Modality Perceiver - Pytorch
 
 Implementation of <a href="https://arxiv.org/abs/2103.03206">Perceiver</a>, with support for multi-modality 
 inputs. Fork of (lucidrains repo)[https://github.com/lucidrains/perceiver-pytorch] extended for
@@ -44,7 +44,6 @@ model = Perceiver(
     max_freq = 10.,              # maximum frequency, hyperparameter depending on how fine the data is
     depth = 6,                   # depth of net
     num_latents = 256,           # number of latents, or induced set points, or centroids. different papers giving it different names
-    cross_dim = 512,             # cross attention dimension
     latent_dim = 512,            # latent dimension
     cross_heads = 1,             # number of heads for cross attention. paper said 1
     latent_heads = 8,            # number of heads for latent self attention, 8
