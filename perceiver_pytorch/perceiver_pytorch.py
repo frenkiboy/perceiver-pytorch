@@ -122,25 +122,24 @@ class Attention(nn.Module):
 
 class Perceiver(nn.Module):
     def __init__(
-            self,
-            *,
-            num_freq_bands,
-            depth,
-            max_freq,
-            freq_base = 2,
-            input_channels = 3,
-            input_axis = 2,
-            num_latents = 512,
-            cross_dim = 512,
-            latent_dim = 512,
-            cross_heads = 1,
-            latent_heads = 8,
-            cross_dim_head = 64,
-            latent_dim_head = 64,
-            num_classes = 1000,
-            attn_dropout = 0.,
-            ff_dropout = 0.,
-            weight_tie_layers = False
+        self,
+        *,
+        num_freq_bands,
+        depth,
+        max_freq,
+        freq_base = 2,
+        input_channels = 3,
+        input_axis = 2,
+        num_latents = 512,
+        latent_dim = 512,
+        cross_heads = 1,
+        latent_heads = 8,
+        cross_dim_head = 64,
+        latent_dim_head = 64,
+        num_classes = 1000,
+        attn_dropout = 0.,
+        ff_dropout = 0.,
+        weight_tie_layers = False
     ):
         super().__init__()
         self.input_axis = input_axis

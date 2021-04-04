@@ -53,7 +53,6 @@ class MultiModalityPerceiver(nn.Module):
             modalities: Iterable[InputModality],
             depth,
             num_latents=512,
-            cross_dim=512,
             latent_dim=512,
             cross_heads=1,
             latent_heads=8,
