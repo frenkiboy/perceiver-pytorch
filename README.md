@@ -5,9 +5,9 @@
 
 ## Perceiver - Pytorch
 
-Implementation of <a href="https://arxiv.org/abs/2103.03206">Perceiver</a>, General Perception with Iterative Attention, in Pytorch
-
-<a href="https://www.youtube.com/watch?v=P_xeshTnPZg">Yannic Kilcher explanation!</a>
+Implementation of <a href="https://arxiv.org/abs/2103.03206">Perceiver</a>, with support for multi-modality 
+inputs. Fork of (lucidrains repo)[https://github.com/lucidrains/perceiver-pytorch] extended for
+multi-modality and support for text embedding splits chunking across layers.
 
 ## Install
 To install the Perceiver implementation with multi-modality (also includes without multi-modality):
@@ -27,10 +27,9 @@ from perceiver_pytorch.multi_modality_with_text_perceiver import MultiModalityWi
 ```
 See tests/test_multimodality_with_text_perceiver.py
 
-To install the Perceiver implementation without multi-modality:
-```bash
-$ pip install perceiver-pytorch
-```
+To install the Perceiver implementation, follow instructions at the 
+(lucidrains repo)[https://github.com/lucidrains/perceiver-pytorch]:
+
 
 ## Usage
 
@@ -62,17 +61,7 @@ img = torch.randn(1, 224, 224, 3) # 1 imagenet image, pixelized
 model(img) # (1, 1000)
 ```
 
-## Experimental
-
-I have also included a version of Perceiver that includes bottom-up (in addition to top-down) attention, using the same scheme as presented in the original <a href="https://arxiv.org/abs/1810.00825">Set Transformers</a> paper as the <a href="https://github.com/lucidrains/isab-pytorch">Induced Set Attention Block</a>.
-
-You simply have to change the above import to
-
-```python
-from perceiver_pytorch.experimental import Perceiver
-```
-
-### Multi-modality perceiver
+## Multi-modality perceiver
 An attractive feature of the perceiver architecture is that it can process multiple modalities of data 
 in the same batch. This is not obvious from the perceiver forward signature shown above, but a relatively
 modest change can support processing video, images and audio with a single model, in one forward.
