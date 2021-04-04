@@ -7,7 +7,24 @@ Implementation of <a href="https://arxiv.org/abs/2103.03206">Perceiver</a>, Gene
 <a href="https://www.youtube.com/watch?v=P_xeshTnPZg">Yannic Kilcher explanation!</a>
 
 ## Install
+To install the Perceiver implementation with multi-modality (also includes without multi-modality):
+```bash
+$ pip install perceiver-multi-modality-pytorch
+```
+Import with:
+```python
+from perceiver_pytorch.modalities import modality_encoding
+from perceiver_pytorch.multi_modality_perceiver import  MultiModalityPerceiver, InputModality
+```
+See tests/test_multimodality_perceiver.py
+or 
+```python
+from perceiver_pytorch.modalities import InputModalityWithEmbedding
+from perceiver_pytorch.multi_modality_with_text_perceiver import MultiModalityWithTextPerceiver
+```
+See tests/test_multimodality_with_text_perceiver.py
 
+To install the Perceiver implementation without multi-modality:
 ```bash
 $ pip install perceiver-pytorch
 ```

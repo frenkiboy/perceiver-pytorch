@@ -8,7 +8,7 @@ license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/fac2003/pytorch_polkadots"
 repository = "https://github.com/fac2003/pytorch_polkadots"
-keywords = ["machine learning", "perceiver", "pytorch", "multi-modality", "image","video","text","audio"]
+keywords = ["machine learning", "perceiver", "pytorch", "multi-modality", "image", "video", "text", "audio"]
 classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
@@ -19,6 +19,10 @@ classifiers = [
 ]
 include = [
     "LICENSE",
+]
+
+packages = [
+    { include = "perceiver_pytorch" },
 ]
 
 [tool.poetry.dependencies]
