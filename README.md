@@ -139,4 +139,10 @@ result = model({'image': image_inputs,
     archivePrefix = {arXiv},
     primaryClass = {cs.CV}
 }
+@misc{campagne2021textperceiver,
+    title   = {Adapting Perceiver for learning with text modalities},
+    author  = {Fabien Campagne},
+    year    = {2021},
+    eprint  = {unpublished results},
+}
 ```
