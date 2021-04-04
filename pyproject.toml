@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "perceiver-multi-modality-pytorch"
-version = "0.0.0"
+version = "1.0.0"
 description = "A fork of perceiver-pytorch that supports multiple modalities for the Perceiver architecture."
 authors = ["Fabien Campagne <fac2003@gmail.com>"]
 license = "MIT"
 
 readme = "README.md"
-homepage = "https://github.com/fac2003/pytorch_polkadots"
-repository = "https://github.com/fac2003/pytorch_polkadots"
+homepage = "https://github.com/fac2003/perceiver-multi-modality-pytorch"
+repository = "https://github.com/fac2003/perceiver-multi-modality-pytorch"
 keywords = ["machine learning", "perceiver", "pytorch", "multi-modality", "image", "video", "text", "audio"]
 classifiers = [
     "Intended Audience :: Developers",
@@ -29,6 +29,8 @@ packages = [
 python = "^3.7"
 torch = "^1.6.0"
 einops = '^0.3'
+#pytorch-memlab = "^0.2.3"
+
 
 [tool.poetry.dev-dependencies]
 
