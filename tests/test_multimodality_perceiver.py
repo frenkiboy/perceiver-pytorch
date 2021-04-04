@@ -36,7 +36,6 @@ def test_multimodality_forward_image_video(image_inputs, video_inputs, audio_inp
         depth=depth,  # depth of net
         num_latents=12,
         # number of latents, or induced set points, or centroids. different papers giving it different names
-        cross_dim=64,  # cross attention dimension
         latent_dim=64,  # latent dimension
         cross_heads=1,  # number of heads for cross attention. paper said 1
         latent_heads=8,  # number of heads for latent self attention, 8
