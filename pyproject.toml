@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "perceiver-multi-modality-pytorch"
+version = "1.0.0"
+description = "A fork of perceiver-pytorch that supports multiple modalities for the Perceiver architecture."
+authors = ["Fabien Campagne <fac2003@gmail.com>"]
+license = "MIT"
+
+readme = "README.md"
+homepage = "https://github.com/fac2003/perceiver-multi-modality-pytorch"
+repository = "https://github.com/fac2003/perceiver-multi-modality-pytorch"
+keywords = ["machine learning", "perceiver", "pytorch", "multi-modality", "image", "video", "text", "audio"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Development Status :: 4 - Beta",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Operating System :: OS Independent",
+]
+include = [
+    "LICENSE",
+]
+
+packages = [
+    { include = "perceiver_pytorch" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+torch = "^1.6.0"
+einops = '^0.3'
+#pytorch-memlab = "^0.2.3"
+
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

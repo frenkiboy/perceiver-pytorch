@@ -1,3 +1,6 @@
+![PyPI](https://img.shields.io/pypi/v/perceiver-multi-modality-pytorch.svg)
+![PyPI](https://img.shields.io/pypi/pyversions/perceiver-multi-modality-pytorch.svg)
+![PyPI](https://img.shields.io/github/license/fac2003/perceiver-mutli-modality-pytorch.svg)
 <img src="./perceiver.png" width="600px"></img>
 
 ## Perceiver - Pytorch
@@ -7,7 +10,24 @@ Implementation of <a href="https://arxiv.org/abs/2103.03206">Perceiver</a>, Gene
 <a href="https://www.youtube.com/watch?v=P_xeshTnPZg">Yannic Kilcher explanation!</a>
 
 ## Install
+To install the Perceiver implementation with multi-modality (also includes without multi-modality):
+```bash
+$ pip install perceiver-multi-modality-pytorch
+```
+Import with:
+```python
+from perceiver_pytorch.modalities import modality_encoding
+from perceiver_pytorch.multi_modality_perceiver import  MultiModalityPerceiver, InputModality
+```
+See tests/test_multimodality_perceiver.py
+or 
+```python
+from perceiver_pytorch.modalities import InputModalityWithEmbedding
+from perceiver_pytorch.multi_modality_with_text_perceiver import MultiModalityWithTextPerceiver
+```
+See tests/test_multimodality_with_text_perceiver.py
 
+To install the Perceiver implementation without multi-modality:
 ```bash
 $ pip install perceiver-pytorch
 ```
@@ -107,6 +127,20 @@ result = model({'image': image_inputs,
                 'video': video_inputs,
                 'audio': audio_inputs})
 ```
+### Text perceiver
+While the Perceiver architecture described by [jaegle2021perceiver] could support text if text was 
+embedded and each dimension of the embedding provided as a channel in the input, this introduces a
+mismatch between the text embedding dimension (typically large, 512/768 or more) and the number of 
+channels used for video and images (typically 3 channels, one for red, green and blue),  or  audio 
+(1 for mono or 2 for stereo channels). When training text embeddings from scratch, this creates an 
+opportunity, because there should be no need for the perceiver to attend to the entire text 
+embedding in each layer. If we  split the text embedding into as many chunks as there are layers in
+a perceiver, we reduce how much we need to pad other modalities,  and introduce a structure to the 
+learned embeddings, were  parts of the text embedding can specialize according to the needs of each
+layer. The perceiver implementation provided in this repo can be used to explore the question of 
+whether splitting text embeddings across layers is beneficial (you would compare the performance of
+MultiModalityWithTextPerceiver with that of MultiModalityPerceiver). 
+
 ## Citations
 
 ```bibtex
@@ -117,5 +151,11 @@ result = model({'image': image_inputs,
     eprint  = {2103.03206},
     archivePrefix = {arXiv},
     primaryClass = {cs.CV}
+}
+@misc{campagne2021textperceiver,
+    title   = {Adapting Perceiver for learning with text modalities},
+    author  = {Fabien Campagne},
+    year    = {2021},
+    eprint  = {unpublished results},
 }
 ```
