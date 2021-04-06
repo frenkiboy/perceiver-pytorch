@@ -36,7 +36,8 @@ class MultiModalityWithTextPerceiver(nn.Module):
         modality_encoding_dim = sum([1 for _ in modalities])
         # Register any embeddings inside this torch module:
         self.embeddings = ModuleDict({modality.name: modality.embedding for modality
-                                      in modalities if modality.embedding})
+                                      in modalities if hasattr(modality, 'embedding') and
+                                      modality.embedding})
 
         # input_dim is the maximum dimension over all input modalities:
         input_dim = max(modality.embedding_dim(self.depth) for modality in modalities) + modality_encoding_dim
@@ -107,9 +108,10 @@ class MultiModalityWithTextPerceiver(nn.Module):
             # Figure out padding for this modality, given max dimension across all modalities:
             padding_size = self.max_modality_dim - modality.embedding_dim(self.depth) - num_modalities
             current_data_modality_shape_without_channels = data.size()[0:-1]
-            padding = torch.zeros(size=current_data_modality_shape_without_channels + (padding_size,), device=data.device)
+            padding = torch.zeros(size=current_data_modality_shape_without_channels + (padding_size,),
+                                  device=data.device)
             # concat to channels of data and flatten axis
-            modality_encodings = modality_encoding(b, axis, modality_index, num_modalities)
+            modality_encodings = modality_encoding(b, axis, modality_index, num_modalities, device=device)
 
             if modality_name in self.embeddings:
                 # restore modality embedding from this torch module:

@@ -76,15 +76,16 @@ class MultiModalityPerceiver(nn.Module):
         batch_sizes = set()
         num_modalities = len(multi_modality_data)
         linearized_data = []
-        linearized_data_per_layer:Dict[int, List[Tensor]] = {}
+        linearized_data_per_layer: Dict[int, List[Tensor]] = {}
 
         for modality_index, modality_name in enumerate(sorted(multi_modality_data.keys())):
-            assert modality_name in  self.modalities, f"modality {modality_name} was not defined in constructor"
+            assert modality_name in self.modalities, f"modality {modality_name} was not defined in constructor"
             data = multi_modality_data[modality_name]
             modality = self.modalities[modality_name]
             b, *axis, _, device = *data.shape, data.device
-            assert len(axis) == modality.input_axis, f'input data must have the right number of  for modality {modality_name}. ' \
-                                                     f'Expected {modality.input_axis} while forward argument offered {len(axis)}'
+            assert len(
+                axis) == modality.input_axis, f'input data must have the right number of  for modality {modality_name}. ' \
+                                              f'Expected {modality.input_axis} while forward argument offered {len(axis)}'
             batch_sizes.add(b)
             assert len(batch_sizes) == 1, "batch size must be the same across all modalities"
             # calculate fourier encoded positions in the range of [-1, 1], for all axis
@@ -101,7 +102,7 @@ class MultiModalityPerceiver(nn.Module):
 
             padding = torch.zeros(size=data.size()[0:-1] + (padding_size,))
             # concat to channels of data and flatten axis
-            modality_encodings = modality_encoding(b, axis, modality_index, num_modalities)
+            modality_encodings = modality_encoding(b, axis, modality_index, num_modalities, device=device)
 
             to_concat = (data, padding, enc_pos, modality_encodings)
 
