@@ -97,7 +97,7 @@ audio_modality = InputModality(
 )
 model = MultiModalityPerceiver(
     modalities=(video_modality, image_modality, audio_modality),
-    depth=6,  # depth of net
+    depth=8,  # depth of net, combined with num_latent_blocks_per_layer to produce full Perceiver
     num_latents=12,
     # number of latents, or induced set points, or centroids. different papers giving it different names
     latent_dim=64,  # latent dimension
@@ -108,7 +108,8 @@ model = MultiModalityPerceiver(
     num_classes=1000,  # output number of classes
     attn_dropout=0.,
     ff_dropout=0.,
-    weight_tie_layers=True
+    weight_tie_layers=True,
+    num_latent_blocks_per_layer=6 # Note that this parameter is 1 in the original Lucidrain implementation
     # whether to weight tie layers (optional, as indicated in the diagram)
 )
 result = model({'image': image_inputs,

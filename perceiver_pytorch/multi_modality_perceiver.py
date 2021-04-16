@@ -5,8 +5,10 @@ from einops import rearrange, repeat
 from torch import Tensor
 from torch import nn
 
+from perceiver_pytorch.caching import cache_by_name_fn
 from perceiver_pytorch.modalities import InputModality, modality_encoding
 from perceiver_pytorch.perceiver_pytorch import PreNorm, Attention, FeedForward, cache_fn, fourier_encode
+from perceiver_pytorch.common import build_perceiver_layers
 
 
 # An implementation of Perceiver that can accept multiple data modalities in the same forward.
@@ -25,7 +27,8 @@ class MultiModalityPerceiver(nn.Module):
             num_classes=1000,
             attn_dropout=0.,
             ff_dropout=0.,
-            weight_tie_layers=False
+            weight_tie_layers=False,
+            num_latent_blocks_per_layer=1
     ):
         super().__init__()
         self.modalities = {modality.name: modality for modality in modalities}
@@ -45,20 +48,14 @@ class MultiModalityPerceiver(nn.Module):
                                                     dropout=attn_dropout))
         get_latent_ff = lambda: PreNorm(latent_dim, FeedForward(latent_dim, dropout=ff_dropout))
 
-        get_cross_attn, get_cross_ff, get_latent_attn, get_latent_ff = map(cache_fn, (
+        get_cross_attn, get_cross_ff, get_latent_attn, get_latent_ff = map(cache_by_name_fn, (
             get_cross_attn, get_cross_ff, get_latent_attn, get_latent_ff))
 
         self.layers = nn.ModuleList([])
-        for i in range(depth):
-            should_cache = i > 0 and weight_tie_layers
-            cache_args = {'_cache': should_cache}
-
-            self.layers.append(nn.ModuleList([
-                get_cross_attn(**cache_args),
-                get_cross_ff(**cache_args),
-                get_latent_attn(**cache_args),
-                get_latent_ff(**cache_args)
-            ]))
+        build_perceiver_layers(self.layers, depth, get_cross_attn, get_cross_ff,
+                               get_latent_attn, get_latent_ff,
+                               weight_tie_layers,
+                               num_latent_blocks_per_layer=num_latent_blocks_per_layer)
 
         self.to_logits = nn.Sequential(
             nn.LayerNorm(latent_dim),
@@ -115,11 +112,10 @@ class MultiModalityPerceiver(nn.Module):
         # Concatenate all the modalities:
         data = torch.cat(linearized_data, dim=1)
 
-        for cross_attn, cross_ff, latent_attn, latent_ff in self.layers:
+        for cross_attn, cross_ff, latent_transformer in self.layers:
             x = cross_attn(x, context=data, mask=mask) + x
             x = cross_ff(x) + x
-            x = latent_attn(x) + x
-            x = latent_ff(x) + x
+            x = latent_transformer(x) + x
 
         x = x.mean(dim=-2)
         return self.to_logits(x)
