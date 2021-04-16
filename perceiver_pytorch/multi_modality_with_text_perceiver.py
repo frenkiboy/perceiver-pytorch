@@ -6,8 +6,10 @@ from torch import Tensor
 from torch import nn
 from torch.nn import ModuleDict
 
+from perceiver_pytorch.caching import cache_by_name_fn
+from perceiver_pytorch.common import build_perceiver_layers
 from perceiver_pytorch.modalities import InputModalityWithEmbedding, modality_encoding
-from perceiver_pytorch.perceiver_pytorch import PreNorm, Attention, FeedForward, cache_fn, fourier_encode
+from perceiver_pytorch.perceiver_pytorch import PreNorm, Attention, FeedForward, fourier_encode
 
 
 # An implementation of Perceiver that can accept multiple data modalities in the same forward, including
@@ -27,7 +29,8 @@ class MultiModalityWithTextPerceiver(nn.Module):
             num_classes=1000,
             attn_dropout=0.,
             ff_dropout=0.,
-            weight_tie_layers=False
+            weight_tie_layers=False,
+            num_latent_blocks_per_layer=6
     ):
         super().__init__()
         self.depth = depth
@@ -36,7 +39,8 @@ class MultiModalityWithTextPerceiver(nn.Module):
         modality_encoding_dim = sum([1 for _ in modalities])
         # Register any embeddings inside this torch module:
         self.embeddings = ModuleDict({modality.name: modality.embedding for modality
-                                      in modalities if modality.embedding})
+                                      in modalities if hasattr(modality, 'embedding') and
+                                      modality.embedding})
 
         # input_dim is the maximum dimension over all input modalities:
         input_dim = max(modality.embedding_dim(self.depth) for modality in modalities) + modality_encoding_dim
@@ -52,20 +56,12 @@ class MultiModalityWithTextPerceiver(nn.Module):
                                                     dropout=attn_dropout))
         get_latent_ff = lambda: PreNorm(latent_dim, FeedForward(latent_dim, dropout=ff_dropout))
 
-        get_cross_attn, get_cross_ff, get_latent_attn, get_latent_ff = map(cache_fn, (
+        get_cross_attn, get_cross_ff, get_latent_attn, get_latent_ff = map(cache_by_name_fn, (
             get_cross_attn, get_cross_ff, get_latent_attn, get_latent_ff))
 
         self.layers = nn.ModuleList([])
-        for i in range(depth):
-            should_cache = i > 0 and weight_tie_layers
-            cache_args = {'_cache': should_cache}
-
-            self.layers.append(nn.ModuleList([
-                get_cross_attn(**cache_args),
-                get_cross_ff(**cache_args),
-                get_latent_attn(**cache_args),
-                get_latent_ff(**cache_args)
-            ]))
+        build_perceiver_layers(self.layers, depth, get_cross_attn, get_cross_ff, get_latent_attn, get_latent_ff,
+                               weight_tie_layers, num_latent_blocks_per_layer=num_latent_blocks_per_layer)
 
         self.to_logits = nn.Sequential(
             nn.LayerNorm(latent_dim),
@@ -107,9 +103,10 @@ class MultiModalityWithTextPerceiver(nn.Module):
             # Figure out padding for this modality, given max dimension across all modalities:
             padding_size = self.max_modality_dim - modality.embedding_dim(self.depth) - num_modalities
             current_data_modality_shape_without_channels = data.size()[0:-1]
-            padding = torch.zeros(size=current_data_modality_shape_without_channels + (padding_size,), device=data.device)
+            padding = torch.zeros(size=current_data_modality_shape_without_channels + (padding_size,),
+                                  device=data.device)
             # concat to channels of data and flatten axis
-            modality_encodings = modality_encoding(b, axis, modality_index, num_modalities)
+            modality_encodings = modality_encoding(b, axis, modality_index, num_modalities, device=device)
 
             if modality_name in self.embeddings:
                 # restore modality embedding from this torch module:
@@ -130,13 +127,12 @@ class MultiModalityWithTextPerceiver(nn.Module):
         b = batch_sizes.pop()
         x = repeat(self.latents, 'n d -> b n d', b=b)
 
-        for i, (cross_attn, cross_ff, latent_attn, latent_ff) in enumerate(self.layers):
+        for i, (cross_attn, cross_ff, latent_transformer) in enumerate(self.layers):
             # Concatenate all the modalities:
             data = torch.cat(linearized_data_per_layer[i], dim=1)
             x = cross_attn(x, context=data, mask=mask) + x
             x = cross_ff(x) + x
-            x = latent_attn(x) + x
-            x = latent_ff(x) + x
+            x = latent_transformer(x) + x
 
         x = x.mean(dim=-2)
         return self.to_logits(x)
