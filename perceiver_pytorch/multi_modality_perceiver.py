@@ -4,10 +4,12 @@ import torch
 from einops import rearrange, repeat
 from torch import Tensor
 from torch import nn
+from torch.nn import Identity
 
 from perceiver_pytorch.caching import cache_by_name_fn
 from perceiver_pytorch.modalities import InputModality, modality_encoding
-from perceiver_pytorch.perceiver_pytorch import PreNorm, Attention, FeedForward, cache_fn, fourier_encode
+from perceiver_pytorch.perceiver_pytorch import PreNorm, Attention, FeedForward, cache_fn, fourier_encode, \
+    FeedForwardGELU
 from perceiver_pytorch.common import build_perceiver_layers
 
 
@@ -24,12 +26,32 @@ class MultiModalityPerceiver(nn.Module):
             latent_heads=8,
             cross_dim_head=64,
             latent_dim_head=64,
-            num_classes=1000,
+            num_classes=None,
             attn_dropout=0.,
             ff_dropout=0.,
             weight_tie_layers=False,
-            num_latent_blocks_per_layer=1
+            num_latent_blocks_per_layer=1,
+            use_gelu: bool = False,
     ):
+        """
+
+        :param modalities:
+        :param depth: Number of times the perceiver will perform cross-attention between latent and input.
+        :param num_latents:
+        :param latent_dim:
+        :param cross_heads:
+        :param latent_heads:
+        :param cross_dim_head:
+        :param latent_dim_head:
+        :param num_classes: Number of classes to predict, or if None, return the hidden state (num latents x hidden_dim)
+        :param attn_dropout:
+        :param ff_dropout:
+        :param weight_tie_layers: True: share weights across layers, False no shared weights.
+        :param num_latent_blocks_per_layer: Number of blocks in the latent transformer.
+        :param use_gelu: Use GELU activation like the Perceiver preprint indicates. False,
+               with Lucidrains' GEGLU activation in feed forward instead.
+
+        """
         super().__init__()
         self.modalities = {modality.name: modality for modality in modalities}
         # we encode modality with one hot encoding, so need one dim per modality:
@@ -38,15 +60,15 @@ class MultiModalityPerceiver(nn.Module):
         input_dim = max(modality.input_dim for modality in modalities) + modality_encoding_dim
         self.max_modality_dim = input_dim
         self.latents = nn.Parameter(torch.randn(num_latents, latent_dim))
-
+        ff_type = FeedForwardGELU if use_gelu else FeedForward
         get_cross_attn = lambda: PreNorm(latent_dim,
                                          Attention(latent_dim, input_dim, heads=cross_heads, dim_head=cross_dim_head,
                                                    dropout=attn_dropout), context_dim=input_dim)
-        get_cross_ff = lambda: PreNorm(latent_dim, FeedForward(latent_dim, dropout=ff_dropout))
+        get_cross_ff = lambda: PreNorm(latent_dim, ff_type(latent_dim, dropout=ff_dropout))
         get_latent_attn = lambda: PreNorm(latent_dim,
                                           Attention(latent_dim, heads=latent_heads, dim_head=latent_dim_head,
                                                     dropout=attn_dropout))
-        get_latent_ff = lambda: PreNorm(latent_dim, FeedForward(latent_dim, dropout=ff_dropout))
+        get_latent_ff = lambda: PreNorm(latent_dim, ff_type(latent_dim, dropout=ff_dropout))
 
         get_cross_attn, get_cross_ff, get_latent_attn, get_latent_ff = map(cache_by_name_fn, (
             get_cross_attn, get_cross_ff, get_latent_attn, get_latent_ff))
@@ -116,6 +138,59 @@ class MultiModalityPerceiver(nn.Module):
             x = cross_attn(x, context=data, mask=mask) + x
             x = cross_ff(x) + x
             x = latent_transformer(x) + x
+        x = self.pool(x)
 
-        x = x.mean(dim=-2)
         return self.to_logits(x)
+
+    def pool(self, x):
+        """
+        Perform pooling over latents.
+        :param x: batch x num_latents x latent_dim
+        :return: pooled x
+        """
+        # implement global pooling
+        return x.mean(dim=-2)
+
+
+class MultiModalityPerceiverNoPooling(MultiModalityPerceiver):
+    def __init__(self, *, modalities: Iterable[InputModality], depth,
+                 num_latents=512, latent_dim=512, cross_heads=1,
+                 latent_heads=8, cross_dim_head=64, latent_dim_head=64,
+                 attn_dropout=0., ff_dropout=0.,
+                 weight_tie_layers=False, num_latent_blocks_per_layer=1,
+                 use_gelu: bool = True):
+        """
+        Perceiver that returns hidden state. Makes it possible to configure pooling with
+        the result of forward.
+        :param modalities:
+        :param depth: Number of times the perceiver will perform cross-attention between latent and input.
+        :param num_latents:
+        :param latent_dim:
+        :param cross_heads:
+        :param latent_heads:
+        :param cross_dim_head:
+        :param latent_dim_head:
+        :param attn_dropout:
+        :param ff_dropout:
+        :param weight_tie_layers: True: share weights across layers, False no shared weights.
+        :param num_latent_blocks_per_layer: Number of blocks in the latent transformer.
+        :param use_gelu: Use GELU activation like the Perceiver preprint indicates. False,
+               with Lucidrains' GEGLU activation in feed forward instead.
+
+        """
+
+        super().__init__(modalities=modalities, depth=depth, num_latents=num_latents, latent_dim=latent_dim,
+                         cross_heads=cross_heads, latent_heads=latent_heads, cross_dim_head=cross_dim_head,
+                         latent_dim_head=latent_dim_head, attn_dropout=attn_dropout, ff_dropout=ff_dropout,
+                         weight_tie_layers=weight_tie_layers, num_latent_blocks_per_layer=num_latent_blocks_per_layer,
+                         use_gelu=use_gelu, num_classes=1)
+        self.to_logits = Identity()
+
+    def pool(self, x):
+        """
+        Do not pool.
+        :param x: batch x num_latents x latent_dim
+        :return: pooled x
+        """
+        # no pooling
+        return x
