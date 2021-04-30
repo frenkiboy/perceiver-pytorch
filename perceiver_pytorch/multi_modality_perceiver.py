@@ -97,7 +97,7 @@ class MultiModalityPerceiver(nn.Module):
             # Figure out padding for this modality, given max dimension across all modalities:
             padding_size = self.max_modality_dim - modality.input_dim - num_modalities
 
-            padding = torch.zeros(size=data.size()[0:-1] + (padding_size,))
+            padding = torch.zeros(size=data.size()[0:-1] + (padding_size,)).to(device)
             # concat to channels of data and flatten axis
             modality_encodings = modality_encoding(b, axis, modality_index, num_modalities, device=device)
 
