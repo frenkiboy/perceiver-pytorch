@@ -122,6 +122,7 @@ class HierarchicalMultiModalityPerceiver(nn.Module):
 
         """
         super().__init__()
+        assert not weight_tie_layers, "HierarchicalMultiModalityPerceiver does not support tied weights"
         self.modalities = {modality.name: modality for modality in modalities}
         # we encode modality with one hot encoding, so need one dim per modality:
         modality_encoding_dim = sum([1 for _ in modalities])

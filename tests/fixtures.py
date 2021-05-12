@@ -3,7 +3,7 @@ from pytest import fixture
 
 batch_size = 3
 num_classes = 32
-depth = 2
+depth = 3
 text_embedding_dim=256
 
 @fixture()
