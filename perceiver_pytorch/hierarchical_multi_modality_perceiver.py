@@ -82,6 +82,8 @@ def build_perceiver_layers_hierarchical(layers, depth, get_cross_attn, get_cross
 
 
 # An implementation of Perceiver that can accept multiple data modalities in the same forward.
+# Can be configured with different numbers of latents and latent_dim at each layer. Initial
+# Implementation supports increasing latent_dim, while reducing the number of latents.
 class HierarchicalMultiModalityPerceiver(nn.Module):
     def __init__(
             self,
@@ -115,6 +117,8 @@ class HierarchicalMultiModalityPerceiver(nn.Module):
         :param num_latent_blocks_per_layer: Number of blocks in the latent transformer.
         :param use_gelu: Use GELU activation like the Perceiver preprint indicates. False,
                with Lucidrains' GEGLU activation in feed forward instead.
+        :param configurator: instance of HierarchicalConfigurator that  determines how many latents and latent_dim
+               to setup at each layer.
 
         """
         super().__init__()
@@ -202,17 +206,21 @@ class HierarchicalMultiModalityPerceiver(nn.Module):
 
         # Concatenate all the modalities:
         data = torch.cat(linearized_data, dim=1)
-        x=None
+        x = None
         for layer_index, (cross_attn, cross_ff, latent_transformer) in enumerate(self.layers):
 
             latents = repeat(self.latents[layer_index], 'n d -> b n d', b=b)
-            num_latents_in_layer=self.latents[layer_index].size(0)
+            num_latents_in_layer = self.latents[layer_index].size(0)
             if x is None:
                 x = latents
             else:
-                pad_right_size=latents.size(2)-x.size(2)
-
-                x = latents + pad(x,(0,pad_right_size), mode="constant", value=0)[:,0:num_latents_in_layer,:]
+                pad_right_size = latents.size(2) - x.size(2)
+                # x produced by the prior layer has more latents, and less dimention in each one. We pad x with zero in the
+                # latent_dim and keep  only the first num_latents_in_layer latents as input to this new layer.
+                # Choosing the first latents, or last, or any other combination should be equivalent since all latents
+                # are optimized during training.
+                prior_layer_x_padded = pad(x, (0, pad_right_size), mode="constant", value=0)[:, 0:num_latents_in_layer, :]
+                x = latents + prior_layer_x_padded
             x = cross_attn(x, context=data, mask=mask) + x
             x = cross_ff(x) + x
             x = latent_transformer(x) + x
