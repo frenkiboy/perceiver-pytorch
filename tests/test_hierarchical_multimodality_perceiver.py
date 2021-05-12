@@ -48,7 +48,7 @@ def test_hierarchical_multimodality_forward_image_video(image_inputs, video_inpu
         attn_dropout=0.,
         ff_dropout=0.,
         weight_tie_layers=False,
-        num_latent_blocks_per_layer=2,
+        num_latent_blocks_per_layer=1,
         configurator=HierarchicalConfigurator(num_latents_begin=12,latent_dim_begin=24,
                                               depth=depth)
         # whether to weight tie layers (optional, as indicated in the diagram)
