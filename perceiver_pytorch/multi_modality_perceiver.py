@@ -61,7 +61,7 @@ class MultiModalityPerceiver(nn.Module):
         self.max_modality_dim = input_dim
         self.latents = nn.Parameter(torch.randn(num_latents, latent_dim))
         ff_type      = FeedForwardGELU if use_gelu else FeedForward
-        
+
         get_cross_attn  = lambda: PreNorm(latent_dim,
                                          Attention(latent_dim, input_dim, heads=cross_heads, dim_head=cross_dim_head,
                                                    dropout=attn_dropout), context_dim=input_dim)
@@ -110,7 +110,7 @@ class MultiModalityPerceiver(nn.Module):
             assert len(batch_sizes) == 1, "batch size must be the same across all modalities"
             # calculate fourier encoded positions in the range of [-1, 1], for all axis
 
-        
+
             # Figure out padding for this modality, given max dimension across all modalities:
             padding_size = self.max_modality_dim - modality.input_dim - num_modalities
 
@@ -131,11 +131,11 @@ class MultiModalityPerceiver(nn.Module):
             to_concat = (data, padding, enc_pos, modality_encodings)
 
             data = torch.cat(to_concat, dim=-1)
-            data = rearrange(data, 'b ... d -> b (...) d')
+            data = rearrange(data, 'b ... d -> b (...) d').to(device)
             linearized_data.append(data)
 
         b = batch_sizes.pop()
-        x = repeat(self.latents, 'n d -> b n d', b=b)
+        x = repeat(self.latents, 'n d -> b n d', b=b).to(device)
 
         # Concatenate all the modalities:
         data = torch.cat(linearized_data, dim=1)

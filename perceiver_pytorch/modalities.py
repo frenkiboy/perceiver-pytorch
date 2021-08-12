@@ -21,8 +21,12 @@ class InputModality:
         return input_dim
 
 
-def modality_encoding(batch_size: int, axes, modality_index: int, num_modalities: int,
-                      device=torch.device('cpu')) -> Tensor:
+def modality_encoding(
+    batch_size: int,
+    axes,
+    modality_index: int,
+    num_modalities: int,
+    device=torch.device('cpu')) -> Tensor:
     """
     Return one-hot encoding of modality given num_modalities, batch size and axes.
     The result need to be compatible with the modality data for concatenation.

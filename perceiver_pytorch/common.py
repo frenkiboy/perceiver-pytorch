@@ -22,11 +22,15 @@ class LatentTransformer(Module):
         return x
 
 
-def build_perceiver_layers(layers, depth, get_cross_attn, get_cross_ff,
-                           get_latent_attn, get_latent_ff,
-                           weight_tie_layers,
-                           num_latent_blocks_per_layer=1,
-                           ):
+def build_perceiver_layers(
+        layers,
+        depth,
+        get_cross_attn,
+        get_cross_ff,
+        get_latent_attn, get_latent_ff,
+        weight_tie_layers,
+        num_latent_blocks_per_layer=1,
+    ):
     for i in range(depth):
         should_cache = i > 0 and weight_tie_layers
         cache_args = {'_cache': should_cache}
